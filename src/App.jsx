@@ -1,12 +1,14 @@
-import React from 'react'
+import React from 'react';
+import ProductsWrapper from './pages/ProductWrapper/ProductsWrapper';
+import './App.css';
 
 function App() {
   return (
     <div>
-      {/* Your todo app UI goes here */}
-      <h1>Todo App</h1>
+      <h1>Products Management</h1>
+      <ProductsWrapper />
     </div>
-  )
+  );
 }
 
-export default App
+export default App;

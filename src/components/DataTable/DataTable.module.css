@@ -1,0 +1,117 @@
+.tableContainer {
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  margin-top: 20px;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.tableHeader {
+  background-color: #f8f9fa;
+  padding: 12px;
+  text-align: left;
+  font-weight: 600;
+  border-bottom: 2px solid #dee2e6;
+}
+
+.tableHeader.sortable {
+  cursor: pointer;
+  user-select: none;
+}
+
+.tableHeader.sortable:hover {
+  background-color: #e9ecef;
+}
+
+.tableRow:nth-child(even) {
+  background-color: #f8f9fa;
+}
+
+.tableRow:hover {
+  background-color: #e9ecef;
+}
+
+.tableCell {
+  padding: 12px;
+  border-bottom: 1px solid #dee2e6;
+  vertical-align: middle;
+}
+
+.sortIcon {
+  margin-left: 8px;
+  opacity: 0.6;
+}
+
+.paginationContainer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px;
+  background-color: #f8f9fa;
+  border-top: 1px solid #dee2e6;
+}
+
+.paginationInfo {
+  color: #6c757d;
+  font-size: 14px;
+}
+
+.paginationControls {
+  display: flex;
+  gap: 8px;
+}
+
+.paginationButton {
+  padding: 8px 12px;
+  border: 1px solid #dee2e6;
+  background-color: white;
+  color: #495057;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.paginationButton:hover:not(:disabled) {
+  background-color: #e9ecef;
+}
+
+.paginationButton:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.paginationButton.active {
+  background-color: #007bff;
+  color: white;
+  border-color: #007bff;
+}
+
+.emptyState {
+  text-align: center;
+  padding: 40px;
+  color: #6c757d;
+}
+
+.actionButtons {
+  display: flex;
+  gap: 8px;
+}
+
+.editButton {
+  padding: 4px 8px;
+  background-color: #28a745;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+}
+
+.editButton:hover {
+  background-color: #218838;
+}
