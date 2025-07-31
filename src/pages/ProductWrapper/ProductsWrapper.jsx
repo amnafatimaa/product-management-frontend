@@ -1,14 +1,15 @@
-import React, { useState } from "react";
-import Header from "../../components/Header/Header";
-import Filters from "../../components/Filters/Filters";
-import DataTable from "../../components/DataTable/DataTable";
-import CreateProductForm from "../../components/CreateProductForm/CreateProductForm";
-import EditProductForm from "../../components/EditProductForm/EditProductForm";
-import LoadingContainer from "../../components/LoadingContainer/LoadingContainer";
-import ErrorContainer from "../../components/ErrorContainer/ErrorContainer";
-import useProducts from "../../hooks/useProducts";
-import { productsApi } from "../../services/api";
-import ExcelUpload from "../../components/ExcelUpload/ExcelUpload";
+import React, { useState } from 'react';
+import styles from './ProductsWrapper.module.css';
+import Header from '../../components/Header/Header';
+import Filters from '../../components/Filters/Filters';
+import DataTable from '../../components/DataTable/DataTable';
+import CreateProductForm from '../../components/CreateProductForm/CreateProductForm';
+import EditProductForm from '../../components/EditProductForm/EditProductForm';
+import LoadingContainer from '../../components/LoadingContainer/LoadingContainer';
+import ErrorContainer from '../../components/ErrorContainer/ErrorContainer';
+import ExcelUpload from '../../components/ExcelUpload/ExcelUpload';
+import useProducts from '../../hooks/useProducts';
+import { productsApi } from '../../services/api';
 
 const ProductsWrapper = () => {
   const {
@@ -25,19 +26,19 @@ const ProductsWrapper = () => {
     refreshData,
   } = useProducts();
 
-  const [showExcelUpload, setShowExcelUpload] = useState(false);
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [showEditForm, setShowEditForm] = useState(false);
+  const [showExcelUpload, setShowExcelUpload] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
   const [deleteError, setDeleteError] = useState(null);
 
   const columns = [
-    { key: "id", label: "ID", sortable: true },
-    { key: "name", label: "Name", sortable: true },
-    { key: "price", label: "Price", sortable: true },
-    { key: "category", label: "Category", sortable: true },
-    { key: "description", label: "Description", sortable: false },
-    { key: "created_at", label: "Created", sortable: true },
+    { key: 'id', label: 'ID', sortable: true },
+    { key: 'name', label: 'Name', sortable: true },
+    { key: 'price', label: 'Price', sortable: true },
+    { key: 'category', label: 'Category', sortable: true },
+    { key: 'description', label: 'Description', sortable: false },
+    { key: 'created_at', label: 'Created', sortable: true },
   ];
 
   const handleEdit = (product) => {
@@ -51,8 +52,8 @@ const ProductsWrapper = () => {
       await productsApi.deleteProduct(productId);
       refreshData();
     } catch (err) {
-      console.error("Failed to delete product:", err);
-      setDeleteError("Failed to delete product. Please try again.");
+      console.error('Failed to delete product:', err);
+      setDeleteError('Failed to delete product. Please try again.');
     }
   };
 
@@ -69,21 +70,18 @@ const ProductsWrapper = () => {
 
   if (loading && products.length === 0) {
     return (
-      <div className="container">
+      <div className={styles.container}>
         <LoadingContainer />
       </div>
     );
   }
 
   return (
-    <div className="container">
+    <div className={styles.container}>
       <Header
-        title="Products"
+        title='Products'
         onCreateClick={() => setShowCreateForm(true)}
-        onExcelUploadClick={() => {
-          console.log("Opening Excel Upload");
-          setShowExcelUpload(true);
-        }}
+        onExcelUploadClick={() => setShowExcelUpload(true)}
       />
       {error && <ErrorContainer error={error} />}
       {deleteError && <ErrorContainer error={deleteError} />}

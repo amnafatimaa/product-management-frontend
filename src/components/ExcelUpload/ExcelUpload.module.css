@@ -1,5 +1,4 @@
-/* src/components/ExcelUpload.module.css */
-
+/* src/pages/ProductWrapper/ExcelUpload.module.css */
 .modal {
   position: fixed;
   top: 0;
@@ -250,7 +249,6 @@
   background-color: #545b62;
 }
 
-/* Responsive adjustments */
 @media (max-width: 768px) {
   .modalContent {
     width: 95%;

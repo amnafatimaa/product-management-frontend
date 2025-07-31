@@ -1,4 +1,7 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useRef, useCallback, useEffect } from 'react';
+import * as XLSX from 'xlsx';
+import { productsApi } from '../../services/api';
+import styles from './ExcelUpload.module.css';
 
 const ExcelUtils = {
   readFile: (file) => {
@@ -6,15 +9,17 @@ const ExcelUtils = {
       const reader = new FileReader();
       reader.onload = (e) => {
         try {
-          const jsonData = [
-            { 'Product Name': 'Sample Product 1', 'Price': 29.99, 'Category': 'Electronics', 'Description': 'Sample description' },
-            { 'Product Name': 'Sample Product 2', 'Price': 15.50, 'Category': 'Books', 'Description': 'Another description' }
-          ];
+          const data = new Uint8Array(e.target.result);
+          const workbook = XLSX.read(data, { type: 'array' });
+          const sheetName = workbook.SheetNames[0];
+          const worksheet = workbook.Sheets[sheetName];
+          const jsonData = XLSX.utils.sheet_to_json(worksheet);
           resolve(jsonData);
         } catch (error) {
-          reject(new Error('Failed to read Excel file'));
+          reject(new Error('Failed to read file: ' + error.message));
         }
       };
+      reader.onerror = () => reject(new Error('Failed to read file'));
       reader.readAsArrayBuffer(file);
     });
   },
@@ -33,7 +38,6 @@ const ExcelUtils = {
 
   validateProduct: (product, rowNumber) => {
     const errors = [];
-    
     if (!product.name || product.name.toString().trim() === '') {
       errors.push('Name is required');
     }
@@ -43,7 +47,6 @@ const ExcelUtils = {
     if (!product.category || product.category.toString().trim() === '') {
       errors.push('Category is required');
     }
-
     return errors.length > 0 ? `Row ${rowNumber}: ${errors.join(', ')}` : null;
   },
 
@@ -55,39 +58,71 @@ const ExcelUtils = {
   })
 };
 
-const useFileUpload = () => {
+const ExcelUpload = ({ isOpen, onClose, onSuccess }) => {
   const [file, setFile] = useState(null);
   const [previewData, setPreviewData] = useState([]);
   const [errors, setErrors] = useState([]);
   const [isProcessing, setIsProcessing] = useState(false);
   const [uploadStats, setUploadStats] = useState(null);
+  const fileInputRef = useRef(null);
 
   const resetState = useCallback(() => {
     setPreviewData([]);
     setErrors([]);
     setUploadStats(null);
+    setFile(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+    console.log('State reset');
   }, []);
 
   const handleFileChange = useCallback(async (event) => {
     const selectedFile = event.target.files[0];
+    console.log('File selected:', selectedFile ? selectedFile.name : 'No file');
     setFile(selectedFile);
-    resetState();
 
     if (selectedFile) {
+      const validTypes = [
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        'application/vnd.ms-excel',
+        'text/csv'
+      ];
+      if (!validTypes.includes(selectedFile.type)) {
+        setErrors(['Please select a valid Excel (.xlsx, .xls) or CSV (.csv) file']);
+        console.log('Invalid file type:', selectedFile.type);
+        setFile(null);
+        if (fileInputRef.current) fileInputRef.current.value = '';
+        return;
+      }
       try {
         const data = await ExcelUtils.readFile(selectedFile);
+        console.log('Parsed data:', data);
         setPreviewData(data.slice(0, 3));
       } catch (error) {
         setErrors([error.message]);
+        console.error('File parsing error:', error.message);
+        setFile(null);
+        if (fileInputRef.current) fileInputRef.current.value = '';
       }
+    } else {
+      resetState();
     }
   }, [resetState]);
 
-  const processFile = useCallback(async () => {
-    if (!file) return { validProducts: [], errorMessages: ['Please select a file first.'] };
+  const handleUpload = useCallback(async () => {
+    console.log('Upload button clicked, file:', file ? file.name : 'No file');
+    if (!file) {
+      setErrors(['Please select a file first']);
+      console.log('No file selected for upload');
+      return;
+    }
+    setIsProcessing(true);
+    setErrors([]);
 
     try {
       const rawData = await ExcelUtils.readFile(file);
+      console.log('Raw data length:', rawData.length);
       const validProducts = [];
       const errorMessages = [];
 
@@ -95,7 +130,6 @@ const useFileUpload = () => {
         const rowNumber = index + 2;
         const normalized = ExcelUtils.normalizeProduct(product);
         const validationError = ExcelUtils.validateProduct(normalized, rowNumber);
-
         if (validationError) {
           errorMessages.push(validationError);
         } else {
@@ -103,344 +137,142 @@ const useFileUpload = () => {
         }
       });
 
-      return { validProducts, errorMessages };
-    } catch (error) {
-      return { validProducts: [], errorMessages: [error.message] };
-    }
-  }, [file]);
-
-  return {
-    file,
-    previewData,
-    errors,
-    isProcessing,
-    uploadStats,
-    setErrors,
-    setIsProcessing,
-    setUploadStats,
-    handleFileChange,
-    processFile,
-    resetState
-  };
-};
-
-const Modal = ({ isOpen, onClose, children }) => {
-  if (!isOpen) return null;
-  return (
-    <div
-      style={{
-        position: 'fixed',
-        top: 0, left: 0, right: 0, bottom: 0,
-        backgroundColor: 'rgba(0, 0, 0, 0.5)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        zIndex: 1000
-      }}
-      onClick={e => { if (e.target === e.currentTarget && onClose) onClose(); }}
-      aria-modal="true"
-      role="dialog"
-    >
-      <div
-        style={{
-          backgroundColor: 'white',
-          borderRadius: '8px',
-          maxWidth: '800px',
-          width: '90%',
-          maxHeight: '90vh',
-          overflow: 'auto',
-          boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)'
-        }}
-      >
-        <div style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          padding: '20px',
-          borderBottom: '1px solid #e5e7eb'
-        }}>
-          <h2 style={{ margin: 0, fontSize: '24px', fontWeight: 'bold' }}>
-            Import Products from Excel
-          </h2>
-          <button
-            onClick={onClose}
-            style={{
-              background: 'none',
-              border: 'none',
-              fontSize: '24px',
-              cursor: 'pointer',
-              padding: '5px'
-            }}
-            aria-label="Close"
-          >
-            ×
-          </button>
-        </div>
-        <div style={{ padding: '20px' }}>
-          {children}
-        </div>
-      </div>
-    </div>
-  );
-};
-
-const Instructions = () => (
-  <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#f3f4f6', borderRadius: '6px' }}>
-    <h3 style={{ margin: '0 0 10px 0' }}>Instructions:</h3>
-    <ol style={{ margin: '0 0 15px 0', paddingLeft: '20px' }}>
-      <li>Download the template file to see the required format</li>
-      <li>Fill in your product data with columns: Product Name, Price, Category, Description</li>
-      <li>Upload your Excel file (.xlsx or .xls)</li>
-    </ol>
-    <button 
-      onClick={() => alert('Template download would happen here')}
-      style={{
-        backgroundColor: '#6b7280',
-        color: 'white',
-        border: 'none',
-        padding: '8px 16px',
-        borderRadius: '4px',
-        cursor: 'pointer'
-      }}
-    >
-      📥 Download Template
-    </button>
-  </div>
-);
-
-const FileUploadSection = ({ file, onFileChange }) => (
-  <div style={{ marginBottom: '20px' }}>
-    <div style={{ position: 'relative', display: 'inline-block' }}>
-      <input
-        type="file"
-        accept=".xlsx,.xls"
-        onChange={onFileChange}
-        style={{
-          position: 'absolute',
-          opacity: 0,
-          width: '100%',
-          height: '100%',
-          cursor: 'pointer'
-        }}
-        id="excel-upload"
-      />
-      <label
-        htmlFor="excel-upload"
-        style={{
-          display: 'inline-block',
-          padding: '10px 20px',
-          backgroundColor: '#3b82f6',
-          color: 'white',
-          borderRadius: '4px',
-          cursor: 'pointer',
-          border: '2px dashed #3b82f6'
-        }}
-      >
-        {file ? `📁 ${file.name}` : '📁 Choose Excel File'}
-      </label>
-    </div>
-  </div>
-);
-
-const PreviewTable = ({ data }) => {
-  if (!data.length) return null;
-
-  return (
-    <div style={{ marginBottom: '20px' }}>
-      <h4 style={{ margin: '0 0 10px 0' }}>Preview (First 3 rows):</h4>
-      <div style={{ 
-        border: '1px solid #d1d5db', 
-        borderRadius: '4px', 
-        overflow: 'auto',
-        maxHeight: '300px'
-      }}>
-        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-          <thead>
-            <tr style={{ backgroundColor: '#f9fafb' }}>
-              {Object.keys(data[0]).map(key => (
-                <th key={key} style={{ 
-                  padding: '8px 12px', 
-                  textAlign: 'left', 
-                  borderBottom: '1px solid #d1d5db',
-                  fontWeight: 'bold'
-                }}>
-                  {key}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {data.map((row, index) => (
-              <tr key={index} style={{ backgroundColor: index % 2 ? '#f9fafb' : 'white' }}>
-                {Object.values(row).map((value, i) => (
-                  <td key={i} style={{ 
-                    padding: '8px 12px', 
-                    borderBottom: '1px solid #e5e7eb'
-                  }}>
-                    {value}
-                  </td>
-                ))}
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </div>
-  );
-};
-
-const ErrorList = ({ errors }) => {
-  if (!errors.length) return null;
-
-  return (
-    <div style={{ 
-      marginBottom: '20px', 
-      padding: '15px', 
-      backgroundColor: '#fef2f2', 
-      borderRadius: '6px',
-      border: '1px solid #fecaca'
-    }}>
-      <h4 style={{ margin: '0 0 10px 0', color: '#dc2626' }}>Errors:</h4>
-      <ul style={{ margin: 0, paddingLeft: '20px' }}>
-        {errors.map((error, index) => (
-          <li key={index} style={{ color: '#dc2626', marginBottom: '5px' }}>
-            {error}
-          </li>
-        ))}
-      </ul>
-    </div>
-  );
-};
-
-const UploadStats = ({ stats }) => {
-  if (!stats) return null;
-
-  return (
-    <div style={{ 
-      marginBottom: '20px', 
-      padding: '15px', 
-      backgroundColor: '#f0f9ff', 
-      borderRadius: '6px',
-      border: '1px solid #bae6fd'
-    }}>
-      <h4 style={{ margin: '0 0 10px 0', color: '#0369a1' }}>Upload Results:</h4>
-      <p style={{ margin: '5px 0', color: '#065f46' }}>
-        ✅ Successfully imported: {stats.success} products
-      </p>
-      {stats.failed > 0 && (
-        <p style={{ margin: '5px 0', color: '#dc2626' }}>
-          ❌ Failed to import: {stats.failed} products
-        </p>
-      )}
-      <p style={{ margin: '5px 0', color: '#374151' }}>
-        📊 Total processed: {stats.total} products
-      </p>
-    </div>
-  );
-};
-
-const ExcelUpload = ({ onSuccess, onClose, isOpen = true }) => {
-  const {
-    file,
-    previewData,
-    errors,
-    isProcessing,
-    uploadStats,
-    setErrors,
-    setIsProcessing,
-    setUploadStats,
-    handleFileChange,
-    processFile
-  } = useFileUpload();
-
-  const handleUpload = useCallback(async () => {
-    if (!file) {
-      setErrors(['Please select a file first.']);
-      return;
-    }
-    setIsProcessing(true);
-    setErrors([]);
-
-    try {
-      const { validProducts, errorMessages } = await processFile();
+      console.log('Valid products:', validProducts.length, 'Errors:', errorMessages);
 
       if (errorMessages.length > 0) {
         setErrors(errorMessages);
       }
 
       if (validProducts.length === 0) {
-        setErrors(prev => [...prev, 'No valid products found to import.']);
+        setErrors(prev => [...prev, 'No valid products found to import']);
+        setIsProcessing(false);
         return;
       }
 
-      await new Promise(resolve => setTimeout(resolve, 2000));
-
+      const response = await productsApi.bulkUploadProducts(validProducts);
+      console.log('API response:', response);
       const stats = {
         total: validProducts.length,
-        success: validProducts.length,
-        failed: 0
+        success: response.count,
+        failed: validProducts.length - response.count
       };
-
       setUploadStats(stats);
 
-      if (stats.success > 0 && typeof onSuccess === 'function') {
-        setTimeout(() => onSuccess(), 1000);
+      if (stats.success > 0 && onSuccess) {
+        onSuccess();
       }
-
     } catch (error) {
-      setErrors(['An unexpected error occurred while processing the file.']);
+      setErrors([error.message || 'Failed to upload products. Please try again.']);
+      console.error('Upload error:', error.message);
     } finally {
       setIsProcessing(false);
     }
-  }, [file, processFile, onSuccess, setErrors, setIsProcessing, setUploadStats]);
+  }, [file, onSuccess]);
+
+  useEffect(() => {
+    if (!isOpen) {
+      resetState();
+    }
+  }, [isOpen, resetState]);
+
+  if (!isOpen) return null;
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose}>
-      <Instructions />
-      <div>
-        <FileUploadSection file={file} onFileChange={handleFileChange} />
-        <PreviewTable data={previewData} />
-        <ErrorList errors={errors} />
-        <UploadStats stats={uploadStats} />
+    <div className={styles.modal}>
+      <div className={styles.modalContent}>
+        <div className={styles.modalHeader}>
+          <h2 className={styles.modalTitle}>Import Products from Excel/CSV</h2>
+          <button className={styles.closeButton} onClick={onClose}>×</button>
+        </div>
+        <div className={styles.content}>
+          <div className={styles.instructions}>
+            <h3>Instructions:</h3>
+            <ol>
+              <li>Prepare an Excel (.xlsx, .xls) or CSV (.csv) file.</li>
+              <li>Ensure columns: Product Name, Price, Category, Description (optional).</li>
+              <li>Upload the file below.</li>
+            </ol>
+          </div>
+          <div className={styles.uploadSection}>
+            <div className={styles.fileInputContainer}>
+              <input
+                type="file"
+                accept=".xlsx,.xls,.csv"
+                onChange={handleFileChange}
+                ref={fileInputRef}
+                className={styles.fileInput}
+                id="excel-upload"
+              />
+              <label htmlFor="excel-upload" className={styles.fileInputLabel}>
+                {file ? `📁 ${file.name}` : '📁 Choose Excel/CSV File'}
+              </label>
+            </div>
+          </div>
+          {previewData.length > 0 && (
+            <div className={styles.preview}>
+              <h4>Preview (First 3 rows):</h4>
+              <div className={styles.previewTable}>
+                <table>
+                  <thead>
+                    <tr>
+                      {Object.keys(previewData[0]).map(key => (
+                        <th key={key}>{key}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {previewData.map((row, index) => (
+                      <tr key={index}>
+                        {Object.values(row).map((value, i) => (
+                          <td key={i}>{value}</td>
+                        ))}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+          {errors.length > 0 && (
+            <div className={styles.errorContainer}>
+              <h4>Errors:</h4>
+              <ul>
+                {errors.map((error, index) => (
+                  <li key={index} className={styles.errorMessage}>{error}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+          {uploadStats && (
+            <div className={styles.statsContainer}>
+              <h4>Upload Results:</h4>
+              <p>✅ Successfully imported: {uploadStats.success} products</p>
+              {uploadStats.failed > 0 && (
+                <p>❌ Failed to import: {uploadStats.failed} products</p>
+              )}
+              <p>📊 Total processed: {uploadStats.total} products</p>
+            </div>
+          )}
+        </div>
+        <div className={styles.buttonGroup}>
+          <button
+            className={`${styles.button} ${styles.secondary}`}
+            onClick={onClose}
+            disabled={isProcessing}
+          >
+            Cancel
+          </button>
+          <button
+            className={`${styles.button} ${styles.primary}`}
+            onClick={handleUpload}
+            disabled={!file || isProcessing}
+            style={{ cursor: file && !isProcessing ? 'pointer' : 'not-allowed' }}
+          >
+            {isProcessing ? 'Processing...' : 'Import Products'}
+          </button>
+        </div>
       </div>
-      <div style={{
-        display: 'flex',
-        gap: '10px',
-        justifyContent: 'flex-end',
-        marginTop: '20px',
-        paddingTop: '20px',
-        borderTop: '1px solid #e5e7eb'
-      }}>
-        <button
-          onClick={onClose}
-          disabled={isProcessing}
-          style={{
-            padding: '10px 20px',
-            border: '1px solid #d1d5db',
-            borderRadius: '4px',
-            backgroundColor: 'white',
-            cursor: isProcessing ? 'not-allowed' : 'pointer',
-            opacity: isProcessing ? 0.5 : 1
-          }}
-        >
-          Cancel
-        </button>
-        <button
-          onClick={handleUpload}
-          disabled={!file || isProcessing}
-          style={{
-            padding: '10px 20px',
-            border: 'none',
-            borderRadius: '4px',
-            backgroundColor: (!file || isProcessing) ? '#9ca3af' : '#3b82f6',
-            color: 'white',
-            cursor: (!file || isProcessing) ? 'not-allowed' : 'pointer'
-          }}
-        >
-          {isProcessing ? 'Processing...' : 'Import Products'}
-        </button>
-      </div>
-    </Modal>
+    </div>
   );
 };
 
