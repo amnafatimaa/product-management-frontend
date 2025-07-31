@@ -2,27 +2,41 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 20px;
-  flex-wrap: wrap;
-  gap: 16px;
+  margin-bottom: 24px;
 }
 
 .title {
-  margin: 0;
-  color: #333;
+  font-size: 24px;
+  font-weight: bold;
+}
+
+.buttons {
+  display: flex;
+  gap: 16px;
 }
 
 .createButton {
-  padding: 10px 20px;
-  background-color: #28a745;
+  padding: 8px 16px;
+  background-color: #22c55e;
   color: white;
   border: none;
   border-radius: 4px;
   cursor: pointer;
-  font-size: 14px;
-  font-weight: 500;
 }
 
 .createButton:hover {
-  background-color: #218838;
+  background-color: #1fb34f;
+}
+
+.excelButton {
+  padding: 8px 16px;
+  background-color: #3b82f6;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.excelButton:hover {
+  background-color: #2b6de6;
 }

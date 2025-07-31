@@ -1,0 +1,271 @@
+/* src/components/ExcelUpload.module.css */
+
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modalContent {
+  background: white;
+  border-radius: 8px;
+  width: 90%;
+  max-width: 800px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+}
+
+.modalHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 24px;
+  border-bottom: 1px solid #e9ecef;
+}
+
+.modalTitle {
+  margin: 0;
+  color: #333;
+  font-size: 1.5rem;
+}
+
+.closeButton {
+  background: none;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  color: #999;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+}
+
+.closeButton:hover {
+  color: #333;
+  background-color: #f8f9fa;
+}
+
+.content {
+  padding: 24px;
+}
+
+.instructions {
+  background-color: #f8f9fa;
+  padding: 16px;
+  border-radius: 6px;
+  margin-bottom: 20px;
+  border-left: 4px solid #007bff;
+}
+
+.instructions h3 {
+  margin: 0 0 12px 0;
+  color: #333;
+  font-size: 1.1rem;
+}
+
+.instructions ol {
+  margin: 12px 0;
+  padding-left: 20px;
+}
+
+.instructions li {
+  margin-bottom: 4px;
+  color: #555;
+}
+
+.uploadSection {
+  margin-bottom: 20px;
+}
+
+.fileInputContainer {
+  margin-bottom: 20px;
+}
+
+.fileInput {
+  display: none;
+}
+
+.fileInputLabel {
+  display: inline-block;
+  padding: 12px 20px;
+  background-color: #f8f9fa;
+  border: 2px dashed #dee2e6;
+  border-radius: 6px;
+  cursor: pointer;
+  text-align: center;
+  color: #495057;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  min-width: 200px;
+}
+
+.fileInputLabel:hover {
+  background-color: #e9ecef;
+  border-color: #adb5bd;
+}
+
+.preview {
+  margin: 20px 0;
+  padding: 16px;
+  background-color: #f8f9fa;
+  border-radius: 6px;
+}
+
+.preview h4 {
+  margin: 0 0 12px 0;
+  color: #333;
+}
+
+.previewTable {
+  overflow-x: auto;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.previewTable table {
+  width: 100%;
+  border-collapse: collapse;
+  background: white;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.previewTable th {
+  background-color: #e9ecef;
+  padding: 8px 12px;
+  text-align: left;
+  font-weight: 600;
+  color: #495057;
+  font-size: 0.875rem;
+  border-bottom: 1px solid #dee2e6;
+}
+
+.previewTable td {
+  padding: 8px 12px;
+  border-bottom: 1px solid #f1f3f4;
+  color: #495057;
+  font-size: 0.875rem;
+}
+
+.previewTable tr:nth-child(even) {
+  background-color: #f8f9fa;
+}
+
+.errorContainer {
+  margin: 20px 0;
+  padding: 16px;
+  background-color: #f8d7da;
+  border: 1px solid #f5c6cb;
+  border-radius: 6px;
+  border-left: 4px solid #dc3545;
+}
+
+.errorContainer h4 {
+  margin: 0 0 12px 0;
+  color: #721c24;
+}
+
+.errorContainer ul {
+  margin: 0;
+  padding-left: 20px;
+}
+
+.errorMessage {
+  color: #721c24;
+  font-size: 0.875rem;
+  margin-bottom: 4px;
+}
+
+.statsContainer {
+  margin: 20px 0;
+  padding: 16px;
+  background-color: #d1ecf1;
+  border: 1px solid #bee5eb;
+  border-radius: 6px;
+  border-left: 4px solid #17a2b8;
+}
+
+.statsContainer h4 {
+  margin: 0 0 12px 0;
+  color: #0c5460;
+}
+
+.statsContainer p {
+  margin: 4px 0;
+  color: #0c5460;
+  font-size: 0.9rem;
+}
+
+.buttonGroup {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  padding-top: 20px;
+  border-top: 1px solid #e9ecef;
+  margin-top: 20px;
+}
+
+.button {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 4px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 120px;
+}
+
+.button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.button.primary {
+  background-color: #007bff;
+  color: white;
+}
+
+.button.primary:hover:not(:disabled) {
+  background-color: #0056b3;
+}
+
+.button.secondary {
+  background-color: #6c757d;
+  color: white;
+}
+
+.button.secondary:hover:not(:disabled) {
+  background-color: #545b62;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .modalContent {
+    width: 95%;
+    margin: 10px;
+  }
+  
+  .content {
+    padding: 16px;
+  }
+  
+  .buttonGroup {
+    flex-direction: column;
+  }
+  
+  .button {
+    width: 100%;
+  }
+}

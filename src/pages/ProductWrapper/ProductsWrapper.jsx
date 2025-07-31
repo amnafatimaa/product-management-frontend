@@ -1,13 +1,14 @@
-import React, { useState } from 'react';
-import styles from './ProductsWrapper.module.css';
-import Header from '../../components/Header/Header';
-import Filters from '../../components/Filters/Filters';
-import DataTable from '../../components/DataTable/DataTable';
-import CreateProductForm from '../../components/CreateProductForm/CreateProductForm';
-import EditProductForm from '../../components/EditProductForm/EditProductForm';
-import LoadingContainer from '../../components/LoadingContainer/LoadingContainer';
-import ErrorContainer from '../../components/ErrorContainer/ErrorContainer';
-import useProducts from '../../hooks/useProducts';
+import React, { useState } from "react";
+import Header from "../../components/Header/Header";
+import Filters from "../../components/Filters/Filters";
+import DataTable from "../../components/DataTable/DataTable";
+import CreateProductForm from "../../components/CreateProductForm/CreateProductForm";
+import EditProductForm from "../../components/EditProductForm/EditProductForm";
+import LoadingContainer from "../../components/LoadingContainer/LoadingContainer";
+import ErrorContainer from "../../components/ErrorContainer/ErrorContainer";
+import useProducts from "../../hooks/useProducts";
+import { productsApi } from "../../services/api";
+import ExcelUpload from "../../components/ExcelUpload/ExcelUpload";
 
 const ProductsWrapper = () => {
   const {
@@ -21,20 +22,22 @@ const ProductsWrapper = () => {
     handleSort,
     handlePageChange,
     handleLimitChange,
-    refreshData
+    refreshData,
   } = useProducts();
 
+  const [showExcelUpload, setShowExcelUpload] = useState(false);
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [showEditForm, setShowEditForm] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
+  const [deleteError, setDeleteError] = useState(null);
 
   const columns = [
-    { key: 'id', label: 'ID', sortable: true },
-    { key: 'name', label: 'Name', sortable: true },
-    { key: 'price', label: 'Price', sortable: true },
-    { key: 'category', label: 'Category', sortable: true },
-    { key: 'description', label: 'Description', sortable: false },
-    { key: 'created_at', label: 'Created', sortable: true }
+    { key: "id", label: "ID", sortable: true },
+    { key: "name", label: "Name", sortable: true },
+    { key: "price", label: "Price", sortable: true },
+    { key: "category", label: "Category", sortable: true },
+    { key: "description", label: "Description", sortable: false },
+    { key: "created_at", label: "Created", sortable: true },
   ];
 
   const handleEdit = (product) => {
@@ -44,11 +47,12 @@ const ProductsWrapper = () => {
 
   const handleDelete = async (productId) => {
     try {
+      setDeleteError(null);
       await productsApi.deleteProduct(productId);
       refreshData();
-    } catch (error) {
-      console.error('Failed to delete product:', error);
-      error('Failed to delete product. Please try again.');
+    } catch (err) {
+      console.error("Failed to delete product:", err);
+      setDeleteError("Failed to delete product. Please try again.");
     }
   };
 
@@ -65,16 +69,24 @@ const ProductsWrapper = () => {
 
   if (loading && products.length === 0) {
     return (
-      <div className={styles.container}>
+      <div className="container">
         <LoadingContainer />
       </div>
     );
   }
 
   return (
-    <div className={styles.container}>
-      <Header title="Products" onCreateClick={() => setShowCreateForm(true)} />
+    <div className="container">
+      <Header
+        title="Products"
+        onCreateClick={() => setShowCreateForm(true)}
+        onExcelUploadClick={() => {
+          console.log("Opening Excel Upload");
+          setShowExcelUpload(true);
+        }}
+      />
       {error && <ErrorContainer error={error} />}
+      {deleteError && <ErrorContainer error={deleteError} />}
       <Filters
         filters={filters}
         categories={categories}
@@ -106,6 +118,11 @@ const ProductsWrapper = () => {
         }}
         onSuccess={handleEditSuccess}
         product={editingProduct}
+      />
+      <ExcelUpload
+        isOpen={showExcelUpload}
+        onClose={() => setShowExcelUpload(false)}
+        onSuccess={refreshData}
       />
     </div>
   );
