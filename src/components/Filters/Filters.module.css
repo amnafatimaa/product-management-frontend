@@ -1,0 +1,86 @@
+.filtersContainer {
+  background: white;
+  padding: 24px;
+  border-radius: 10px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  margin: 0 auto 24px auto;
+  max-width: 1200px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.filtersRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+.filterGroup {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 200px;
+  min-width: 180px;
+  max-width: 240px;
+  box-sizing: border-box;
+}
+
+.filterLabel {
+  font-weight: 500;
+  color: #333;
+  font-size: 14px;
+  margin-bottom: 6px;
+}
+
+.filterInput,
+.filterSelect {
+  padding: 10px 12px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 14px;
+  background-color: white;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.filterInput:focus,
+.filterSelect:focus {
+  outline: none;
+  border-color: #007bff;
+  box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.15);
+}
+
+.priceRangeContainer {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+}
+
+.priceInput {
+  width: 100px;
+  padding: 10px 12px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 14px;
+  box-sizing: border-box;
+}
+
+@media (max-width: 768px) {
+  .filtersRow {
+    flex-direction: column;
+  }
+
+  .filterGroup,
+  .priceInput {
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .priceRangeContainer {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}

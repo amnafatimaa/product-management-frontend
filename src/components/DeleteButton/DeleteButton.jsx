@@ -8,10 +8,12 @@ const DeleteButton = ({ productId, productName, onDelete }) => {
   const handleDelete = async () => {
     setIsDeleting(true);
     try {
-      await onDelete(productId);
+      // Don't pass productId - the onDelete function already knows which product to delete
+      await onDelete();
       setShowConfirm(false);
     } catch (error) {
       console.error('Failed to delete product:', error);
+      alert('Failed to delete product. Please try again.');
     } finally {
       setIsDeleting(false);
     }
@@ -22,9 +24,11 @@ const DeleteButton = ({ productId, productName, onDelete }) => {
       <button
         className={styles.deleteButton}
         onClick={() => setShowConfirm(true)}
+        type="button"
       >
         Delete
       </button>
+
       {showConfirm && (
         <div
           className={styles.modal}
