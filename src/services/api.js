@@ -4,7 +4,17 @@ const API_URL = 'http://localhost:8000/api';
 
 const productsApi = {
   getProducts: async (filters) => {
-    const response = await axios.get(`${API_URL}/products`, { params: filters });
+    const params = {
+      search: filters.search || undefined,
+      category: filters.category || undefined,
+      min_price: filters.min_price || undefined,
+      max_price: filters.max_price || undefined,
+      sort_by: filters.sort_by || undefined,
+      order: filters.order || undefined,
+      limit: filters.limit || undefined,
+      page: filters.page || undefined,
+    };
+    const response = await axios.get(`${API_URL}/products`, { params });
     return response.data;
   },
 
